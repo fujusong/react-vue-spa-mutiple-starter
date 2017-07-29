@@ -1,2 +1,3 @@
 # react-vue-spa-mutiple-starter
-A template for self introduce
+- Start kit for react or vue
+- SPA or mutiple page support
