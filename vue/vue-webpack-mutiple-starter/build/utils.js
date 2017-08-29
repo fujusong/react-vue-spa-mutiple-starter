@@ -1,13 +1,41 @@
 var path = require('path')
+var glob = require('glob');
 var config = require('../config')
 var ExtractTextPlugin = require('extract-text-webpack-plugin')
+var HtmlWebpackPlugin = require('html-webpack-plugin')
 
 exports.assetsPath = function (_path) {
   var assetsSubDirectory = process.env.NODE_ENV === 'production'
     ? config.build.assetsSubDirectory
     : config.dev.assetsSubDirectory
-  return path.posix.join(assetsSubDirectory, _path)
+  // return path.posix.join(assetsSubDirectory, _path)
+  return _path 
 }
+
+// get the dest path of the assets
+exports.assetsMoveDestPath = function (_path) {
+    var assetsSubDirectory = process.env.NODE_ENV === 'production'
+    ? config.build.assetsSubDirectory
+    : config.dev.assetsSubDirectory;
+  var assetsCommonSubDirectory = process.env.NODE_ENV === 'production'
+    ? config.build.assetsCommonSubDirectory
+    : config.dev.assetsCommonSubDirectory;
+    return path.posix.join(assetsSubDirectory, assetsCommonSubDirectory, _path)
+}
+//check if the file include the module name
+exports.checkFileNeedUpdatePath = function (_path){
+    let arr = config.build.assetsCommonChunkName;
+    let length = arr.length;
+    //console.log("checkFileNeedUpdatePath " + _path + " length:"+ length )
+    for(let i= 0; i< length;i++)
+    {
+        //console.log("arr[i]="+arr[i])
+        if (_path.includes(arr[i])){
+            return true;
+        }
+    }
+    return false;
+}  
 
 exports.cssLoaders = function (options) {
   options = options || {}
@@ -68,4 +96,79 @@ exports.styleLoaders = function (options) {
     })
   }
   return output
+}
+
+exports.moduleKeys = [];
+exports.currentModule="";
+
+
+exports.getEntries = function (globPath) {
+  var entries = {}
+  /**
+   * 读取src目录,并进行路径裁剪
+   */
+  glob.sync(globPath).forEach(function (entry) {
+    /**
+     * path.basename 提取出用 ‘/' 隔开的path的最后一部分，除第一个参数外其余是需要过滤的字符串
+     * path.extname 获取文件后缀
+     */
+    // var basename = path.basename(entry, path.extname(entry), 'router.js') // 过滤router.js
+    // ***************begin***************
+    // 当然， 你也可以加上模块名称, 即输出如下： { module/main: './src/module/index/main.js', module/test: './src/module/test/test.js' }
+    // 最终编译输出的文件也在module目录下， 访问路径需要时 localhost:8080/module/index.html
+    // slice 从已有的数组中返回选定的元素, -3 倒序选择，即选择最后三个
+    var tmp = entry.split('/').splice(-3)
+    var moduleName = tmp.slice(1, 2);
+    // ***************end***************
+    var tempArr = entry.split('/src/module/');
+    var tempArr = tempArr[1].split('/');
+    var fname = tempArr[0];
+
+   // entries[fname+'/'+moduleName] = entry
+    entries[moduleName] = entry
+  });
+   //console.log(entries);
+  // 获取的主入口如下： { main: './src/module/index/main.js', test: './src/module/test/test.js' }
+  return entries;
+}
+
+exports.getModuleName = function (globPath) {
+  var tmp = globPath.split('/src/module/');
+  var moduleName = tmp.slice(1, 2);
+  return moduleName;
+}
+
+// generate dist index.html with correct asset hash for caching.
+// you can customize output by editing /index.html
+// see https://github.com/ampedandwired/html-webpack-plugin
+exports.getHtmlWebpackPlugins = function () {
+  var pages = this.getEntries('./src/module/**/*.html');
+  this.moduleKeys = Object.keys(pages);
+  var htmlWebpackPlugins = []
+  for (var page in pages) {
+    // 配置生成的html文件，定义路径等
+    var conf = {
+      filename: page+'/'+page + '.html',
+      template: pages[page], //模板路径
+      inject: true,
+      // excludeChunks 允许跳过某些chunks, 而chunks告诉插件要引用entry里面的哪几个入口
+      // 如何更好的理解这块呢？举个例子：比如本demo中包含两个模块（index和about），最好的当然是各个模块引入自己所需的js，
+      // 而不是每个页面都引入所有的js，你可以把下面这个excludeChunks去掉，然后npm run build，然后看编译出来的index.html和about.html就知道了
+      // filter：将数据过滤，然后返回符合要求的数据，Object.keys是获取JSON对象中的每个key
+      excludeChunks: Object.keys(pages).filter(item => {
+        return (item != page)
+      }),
+      minify: {
+        removeComments: true,
+        collapseWhitespace: true,
+        removeAttributeQuotes: true
+        // more options:
+        // https://github.com/kangax/html-minifier#options-quick-reference
+      },
+      // necessary to consistently work with multiple chunks via CommonsChunkPlugin
+      chunksSortMode: 'dependency'
+    }
+    htmlWebpackPlugins.push(new HtmlWebpackPlugin(conf))
+  }
+  return htmlWebpackPlugins
 }

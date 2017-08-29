@@ -7,10 +7,28 @@ function resolve (dir) {
   return path.join(__dirname, '..', dir)
 }
 
+function changeURLPath(_path){
+  console.log(_path);
+  let name
+  if(_path.includes('src/module/')){
+    name = _path.split("src/module/")
+    return name[1];
+  }
+  else if(_path.includes('src/assets')){
+    name = _path.split("src/assets")
+    return utils.assetsMoveDestPath(name[1])
+  }
+  else if(_path.includes('fonts')) // still have fonts not in src module folder
+  {
+    name = _path.split("fonts")
+    return utils.assetsMoveDestPath('fonts'+name[1])
+  }
+  else
+    return utils.assetsMoveDestPath(_path);
+}
+
 module.exports = {
-  entry: {
-    app: './src/main.js'
-  },
+  entry: utils.getEntries('./src/module/**/*.js'),
   output: {
     path: config.build.assetsRoot,
     filename: '[name].js',
@@ -51,7 +69,8 @@ module.exports = {
         loader: 'url-loader',
         options: {
           limit: 10000,
-          name: utils.assetsPath('img/[name].[hash:7].[ext]')
+          name: utils.assetsPath('img/[name].[hash:7].[ext]'),
+          outputPath: changeURLPath
         }
       },
       {
@@ -59,7 +78,8 @@ module.exports = {
         loader: 'url-loader',
         options: {
           limit: 10000,
-          name: utils.assetsPath('media/[name].[hash:7].[ext]')
+          name: utils.assetsPath('media/[name].[hash:7].[ext]'),
+          outputPath: changeURLPath
         }
       },
       {
@@ -67,7 +87,8 @@ module.exports = {
         loader: 'url-loader',
         options: {
           limit: 10000,
-          name: utils.assetsPath('fonts/[name].[hash:7].[ext]')
+          name: utils.assetsPath('fonts/[name].[hash:7].[ext]'),
+          outputPath: changeURLPath
         }
       }
     ]
