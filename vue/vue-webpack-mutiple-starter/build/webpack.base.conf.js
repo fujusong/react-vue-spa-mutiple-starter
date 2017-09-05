@@ -28,7 +28,7 @@ function changeURLPath(_path){
 }
 
 module.exports = {
-  entry: utils.getEntries('./src/module/**/*.js'),
+  entry: utils.getEntries('./src/module/*/*.js'),
   output: {
     path: config.build.assetsRoot,
     filename: '[name].js',

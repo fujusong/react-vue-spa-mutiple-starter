@@ -142,7 +142,7 @@ exports.getModuleName = function (globPath) {
 // you can customize output by editing /index.html
 // see https://github.com/ampedandwired/html-webpack-plugin
 exports.getHtmlWebpackPlugins = function () {
-  var pages = this.getEntries('./src/module/**/*.html');
+  var pages = this.getEntries('./src/module/*/*.html');
   this.moduleKeys = Object.keys(pages);
   var htmlWebpackPlugins = []
   for (var page in pages) {
