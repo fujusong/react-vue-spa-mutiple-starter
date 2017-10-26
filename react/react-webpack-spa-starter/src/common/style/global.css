@@ -1,0 +1,9 @@
+body{ 
+	background:#ddd; 
+}
+
+:local(.box){ 
+	background-color:#ff0; 
+	padding:1em; 
+	border:1px solid #000; 
+}
